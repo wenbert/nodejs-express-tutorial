@@ -1,6 +1,8 @@
-#Building Web Applications with Node.js and Express 4.0
+# Building Web Applications with Node.js and Express 4.0
 
 https://app.pluralsight.com/player?course=nodejs-express-web-applications-update&author=jonathan-mills&name=3b5a5eb2-d13c-43e4-bfe1-015f98659a97&clip=0&mode=live
+
+You can view Javascript and ES6 here: https://github.com/wenbert/es6
 
 ## Building web apps
 * From the beginning
