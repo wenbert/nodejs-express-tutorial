@@ -216,3 +216,5 @@ app.use('/js', express.static(path.join(__dirname, 'node_modules/popper.js/dist/
 ```
 
 So now we have static files served from our own directory!
+
+Next steps, we setup the Tooling. For example, we have to restart everytime we change something.
