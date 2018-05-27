@@ -48,7 +48,7 @@ app.get('/', function(req, res) {
 });
 
 app.listen(3000, function() {
-    console.log('listenint on port 3000');
+    console.log('listening on port 3000');
 });
 ```
 
@@ -56,7 +56,7 @@ app.listen(3000, function() {
 
 ```
 $  node app.js
-listenint on port 3000
+listening on port 3000
 ```
 
 Go the http://localhost:3000/
@@ -126,7 +126,7 @@ app.get('/', function(req, res) {
 });
 ```
 
-Now, with the paths, most systems will have a slash `/`. But for Windows, we would have a backslash `\`. So to go around this, we use `path` package. (NO need to `npm istall` this)
+With the paths, most systems will have a slash `/`. But for Windows, we would have a backslash `\`. So to go around this, we use `path` package. (NO need to `npm istall` this)
 ```javascript
 //app.js
 var path = require('path');
@@ -171,7 +171,7 @@ Bootstrap template just copy-pasted from: https://getbootstrap.com/docs/4.1/gett
 </html>
 ```
 
-Now, let serve files from our own server.
+Let serve files from our own server.
 
 Create a directory called `public`. And inside that, create both `css` and `js`.
 ```
@@ -192,14 +192,14 @@ Now you would include files in your HTML using something like this:
 <script src="/js/bootstrap.min.js"></script>
 ```
 
-Now, we could download each one of those files. But we'd rather be using NPM.
+We could download each one of those files. But we'd rather be using NPM.
 
 So...
 ```
 $ npm install bootstrap jquery popper.js --save
 ```
 
-Now that would install those libraries into `node_modules`. Now believe it or not, we just copy those manually to the `public/css` and `public/js` folders. Copy the `node_modules/bootstrap/dist`  and `node_modules/jquery/dist`.
+That would install those libraries into `node_modules`. Believe it or not, we just copy those manually to the `public/css` and `public/js` folders. Copy the `node_modules/bootstrap/dist`  and `node_modules/jquery/dist`.
 
 But that doesn't make sense. Because we would have to copy dependencies. For example, `popper`. WTF.
 
@@ -214,7 +214,35 @@ app.use('/js', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/
 app.use('/js', express.static(path.join(__dirname, 'node_modules/jquery/dist')));
 app.use('/js', express.static(path.join(__dirname, 'node_modules/popper.js/dist/umd')));
 ```
+And the `index.html` would look like this:
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-So now we have static files served from our own directory!
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <title>Hello, world!</title>
+  </head>
+  <body>
+    <div class="container">
+        <div class="jumbotron">
+            Hello, world!
+        </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="/js/jquery.slim.min.js"></script>
+    <script src="/js/popper.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+  </body>
+</html>
+```
+
+So we have static files served from our own directory!
 
 Next steps, we setup the Tooling. For example, we have to restart everytime we change something.
