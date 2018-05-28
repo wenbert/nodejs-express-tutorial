@@ -246,3 +246,42 @@ And the `index.html` would look like this:
 So we have static files served from our own directory!
 
 Next steps, we setup the Tooling. For example, we have to restart everytime we change something.
+
+## Tooling
+
+### NPM start
+Instead of constantly running `$ DEBUG=app node app.js`, we setup in `package.json` in the `scripts` section.
+
+```json
+"scripts": {
+    "start": "DEBUG=app node app.js", //<-- Add that!
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+```
+
+Then in your CLI, just do: `$ npm start`
+
+### ESLint
+Static code analysis.
+
+Airbnb Style Guide?
+
+Run: `$ npm install eslint --save-dev` to install
+
+Then:
+```
+$ ./node_modules/.bin/eslint --init
+? How would you like to configure ESLint? Use a popular style guide
+? Which style guide do you want to follow? Airbnb
+? Do you use React? No
+? What format do you want your config file to be in? JavaScript
+```
+
+When that's done, just run: `$ npm run lint`.
+
+### ES6 and beyond
+https://node.green
+
+### Nodemon
+
+### Environmental variables
