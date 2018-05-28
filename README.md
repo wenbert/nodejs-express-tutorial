@@ -371,3 +371,38 @@ app.listen(port, () => {
 
 Now, need to restart. After doing so, you'll notice that you are now listening on port 4000.
 
+## Templating Engines
+
+### Pug
+Formerly known as Jade.
+
+If you want to use this open up `app.js`:
+```javascript
+app.set('views', './src/views');
+app.set('view engine', 'pug');
+```
+So create the directories: `./src/views` 
+
+Woops, almost forgot to install it. `$ npm install pug --save`
+
+Create a new file `./src/views/index.pug` with the contents:
+```pug
+html
+    head
+        title MyApp
+    body
+        h1 My App
+        p 
+            h3 a sub header
+```
+
+In `app.js`, instead of doing a `res.sendFile()`, we do a `res.render()`
+
+```javascript
+//res.sendFile(path.join(__dirname, 'views/index.html'));
+res.render('index');
+```
+
+Go to http://localhost:4000/. You should see the HTML file created in `index.pug`
+
+### EJS
