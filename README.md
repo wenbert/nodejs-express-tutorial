@@ -279,9 +279,95 @@ $ ./node_modules/.bin/eslint --init
 
 When that's done, just run: `$ npm run lint`.
 
+#### Installing ESLint for Visual Studio Code
+To install with VSCode, open `View` > `Extensions` and look for `ESLint by Dirk Baeumer`. Once you reload, you should see some code notices/messages in your Javascript files.
+
+#### Refactoring Tips in VS Code
+Multi-select occurrences of a text in a file.
+* Double-click a text
+* `Selection` > `Select All Occurrences`
+* Modify text.
+
+Also right-click anywhere in the code without highlighting anything and then select `Format Document`.
+
+You can also use `eslint` to fix a file. Run: `$ ./node_modules/.bin/eslint --fix app.js`
+
 ### ES6 and beyond
 https://node.green
 
 ### Nodemon
+http://nodemon.io/
+
+> Nodemon is a utility that will monitor for any changes in your source and automatically restart your server. 
+
+Install: `$ npm install nodemon --save`
+
+Modify `package.json` start to use `nodemon` and add the `nodemonConfig` (maybe after `devDependencies`)
+```json
+...
+  "scripts": {
+    "start": "DEBUG=app nodemon app.js",
+    "lint": "eslint app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+... snip ...
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.12.0"
+  },
+  "nodemonConfig": {
+    "restartable":"rs",
+    "ignore": ["node_modules/**/node_modules"],
+    "delay": "2500"
+  }
+...
+```
+
+Then run `$ npm start`.
+
+```
+$ npm start
+
+> library@1.0.0 start /Users/wenbert/dev/nodejs-express/library
+> DEBUG=app nodemon app.js
+
+[nodemon] 1.17.5
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching: *.*
+[nodemon] starting `node app.js`
+  app listening on port 3000 +0ms
+```
+
+Try to modify a file, then 2.5 seconds later, it restarts. 
 
 ### Environmental variables
+
+At the moment, we hard-coded port 3000 in `app.js`. That's not really recommended. So we add an `env` option in `nodemonConfig`.
+
+`package.json` in `nodemonConfig` should like like this now;
+```json
+...
+  "nodemonConfig": {
+    "restartable":"rs",
+    "ignore": ["node_modules/**/node_modules"],
+    "delay": "2500",
+    "env": {
+      "NODE_ENV": "development",
+      "PORT": 4000
+    }
+  }
+...
+```
+
+So to use that new config, we open up `app.js` and do something like this:
+
+```javascript
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  debug(`listening on port ${chalk.green(port)}`);
+});
+```
+
+Now, need to restart. After doing so, you'll notice that you are now listening on port 4000.
+
