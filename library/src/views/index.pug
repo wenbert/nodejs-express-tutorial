@@ -1,7 +1,10 @@
 html
     head
         title MyApp
-    body
-        h1 My App
+    body(class=["myClass"])
+        h1(id='MyId')=title
         p 
             h3 a sub header
+        ul
+            each val in letters
+                li=val

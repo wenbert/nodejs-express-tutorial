@@ -405,4 +405,158 @@ res.render('index');
 
 Go to http://localhost:4000/. You should see the HTML file created in `index.pug`
 
+#### Passing variables / objects to the template
+In `app.js`, let's say we want to pass a title variable to the `index.pug` template.
+```javascript
+app.get('/', (req, res) => {
+  res.render('index', { title: 'MyLibrary', letters: ['a', 'b', 'c'] });
+});
+```
+Note that `{ title: 'MyLibrary', letters: ['a', 'b', 'c'] }` is an object. And `letters` is an array inside that object.
+
+In `index.pug` wewe would have `title` displayed as `h1(id='MyId')=title`. See below:
+```pug
+html
+    head
+        title MyApp
+    body(class=["myClass"])
+        h1(id='MyId')=title
+        p 
+            h3 a sub header
+        ul
+            each val in letters
+                li=val
+```
+Refresh your browser, and you should see "MyLibrary" in the H1. And the letters: a, b, and c in a list.
+
 ### EJS
+
+In `app.js`, modify the part where you set the template engine.
+```javascript
+// app.set('view engine', 'pug');
+app.set('view engine', 'ejs');
+```
+
+Run `$ npm install ejs --save`.
+
+Then rename `index.pug` to `index.ejs`. Modify its contents to have something like this:
+```html
+<html>
+    <head>
+    </head>
+    <body>
+        <h1>Welcome to <%=title%></h1>
+        <ul>
+            <%for (var i = 0; i < letters.length; i++) {%>
+                <li><%=letters[i]%></li>
+            <%}%>
+        </ul>
+    </body>
+</html>
+```
+You can also install an extension `.ejs` by searching for `EJS` in the `Extensions` section for VSCode. This will enable syntax highlighting when editing .ejs files.
+
+### Templates
+
+The tutorial uses some custom Bootstrap theme. I find that unnecessary. For this one, let's just use the default Bootstrap CSS.
+
+The `index.ejs` file should more or less look like this one:
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <title><%=title%></title>
+  </head>
+  <body>
+    <div class="container">
+        <h1>
+            <%=title%>
+        </h1>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="/js/jquery.slim.min.js"></script>
+    <script src="/js/popper.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+  </body>
+</html>
+```
+
+Next chapters, we'll see some routing, databases, authentication, etc.
+
+## Routing
+* Building a Web Application
+* Build Routes for Our Application
+* Separating Files
+* Parameter Variables
+* Router Functions
+
+### Navigation
+For now, we are only doing the index part of our application.
+```javascript
+app.get('/', (req, res) => {
+  res.render(
+    'index',
+    {
+      title: 'MyLibrary',
+      nav: [
+        { link: '/books', title: 'Books' },
+        { link: '/authors', title: 'Authors' },
+      ],
+    },
+  );
+});
+```
+So here, we are passing in an array of objects for the navigation.
+And the corresponding loop for this in `index.ejs` is:
+```html
+<div class="navbar-nav">
+<%for (var i = 0; i < nav.length; i++) {%>
+    <a class="nav-item nav-link" href="<%=nav[i].link%>"><%=nav[i].title%></a>
+<%}%>
+</div>
+```
+
+Now the next question would be what do we do with the `/books` and `/authors`?
+
+Well we can manually add in `app.js` another `app.get()` for `books`. But do we want to do it like that for every route/link we have?
+
+Of course not. That would clutter up pretty quickly. What we should be doing is use a "router".
+
+Now open `app.js` and add something like this:
+```javascript
+const bookRouter = express.Router();
+
+// A
+bookRouter.route('/')
+  .get((req, res) => {
+    res.send('hello books');
+  });
+// That .get() is the same .get() from the index
+
+// Another one
+
+// B
+bookRouter.route('/single')
+  .get((req, res) => {
+    res.send('hello single book');
+  });
+
+// C
+app.use('/books', bookRouter);
+```
+The code above is saying that `C` has `/books` with `bookRouter`.
+And that `A`, is the main bookRouter. So anything in `http://localhost:4000/books` would fall into `A`.
+And then `B` is under `A` (main bookRouter), so anything in `http://localhost:4000/books/single` would use `B`
+
+So now, these links would work:
+* http://localhost:4000/books
+* http://localhost:4000/books/single
+
