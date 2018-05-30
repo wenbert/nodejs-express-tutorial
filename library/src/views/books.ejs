@@ -1,0 +1,10 @@
+<ul>
+<%for (var i = 0; i < books.length; i++) {%>
+    <li>
+        <a class="nav-item nav-link" href="/books/<%=i%>">
+            <%=books[i].title%>
+            by (<%=books[i].author%>)
+        </a>
+    </li>
+<%}%>
+</ul>

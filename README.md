@@ -560,3 +560,201 @@ So now, these links would work:
 * http://localhost:4000/books
 * http://localhost:4000/books/single
 
+### Separating Files
+Our `app.js` is starting to get bloated. At the moment, we have all the routes, required `const` variables, etc. all in one file. Let's start to separate out files a bit.
+
+Create a directory name `routes` inside `src`.
+
+Then create this file: `./src/routes/bookRouter.js`:
+```javascript
+const express = require('express');
+const bookRouter = express.Router();
+
+const books = [
+  {
+    title: 'The Time Machine',
+    genre: 'Science Fiction',
+    author: 'H. G. Wells',
+    read: false,
+  },
+  ...
+];
+
+bookRouter.route('/')
+  .get((req, res) => {
+    res.render(
+      'books',
+      {
+        title: 'MyLibrary',
+        nav,
+        books,
+      },
+    );
+  });
+
+bookRouter.route('/single')
+  .get((req, res) => {
+    res.render('hello single book');
+  });
+
+module.exports = bookRouter;
+
+```
+This here is an isolated router file. Don't forget to export the `bookRouter` at the end.
+
+Then in `apps.js` it would just be a matter of using `require` for the file.
+
+```javascript
+const bookRouter = require('./src/routes/bookRoutes');
+
+app.use('/books', bookRouter);
+
+```
+
+### Passing parameters in routes
+This part is for the `single` books. ie: When you click on a link for the books list. We pass in the `id` in the URL, the router receives it, then so on.
+
+The `booksRoute.js` would have something like this now:
+```javascript
+const express = require('express');
+
+const bookRouter = express.Router();
+
+const books = [
+    {
+      title: 'The Time Machine', genre: 'Science Fiction', author: 'H. G. Wells', read: false,
+    },
+    {
+      title: 'The Dark World', genre: 'Fantasy', author: 'Henry Kuttner', read: false,
+    },
+  ];
+
+bookRouter.route('/')
+  .get((req, res) => {
+    res.render(
+      'books',
+      {
+        title: 'MyLibrary',
+        nav: [
+          { link: '/books', title: 'Books' },
+          { link: '/authors', title: 'Authors' },
+        ],
+        books,
+      },
+    );
+  });
+
+// bookRouter.route('/single')
+//   .get((req, res) => {
+//     res.render('hello single book');
+//   });
+bookRouter.route('/:id')
+  .get((req, res) => {
+    // We can do this, but ESLint advices us to use
+    // const id = req.params.id;
+    const { id } = req.params;
+    res.render(
+      'book',
+      {
+        title: 'MyLibrary',
+        nav: [
+          { link: '/books', title: 'Books' },
+          { link: '/authors', title: 'Authors' },
+        ],
+        book: books[id],
+      },
+
+    );
+  });
+
+module.exports = bookRouter;
+
+```
+`:id` is anything `/books/123`, `/books/456`. It will become available in `req.params.id`.
+
+We end up using: `const { id } = req.params;` because we want to use "destructuring". See https://github.com/wenbert/es6/blob/master/rapid-es6-training/README.md#destructuring.
+
+Next is to create the template/view file. Create a new file `./src/views/book.ejs`.
+```html
+<h1>
+    <%=book.title%>
+</h1>
+<p>
+    Author: <%=book.author%><br/>
+    Genre: <%=book.genre%>
+</p>
+```
+
+Now, when you click on the books list, you should see the "book details".
+
+### Routing Functions
+As of this time, we are copy-pasting the `nav` variable in the main router and in `bookRouter`. We need to fix that. 
+
+To do this, we need to pass `nav` to `bookRouter`. Open `app.js` and modify it to contain this:
+```javascript
+const nav = [
+  { link: '/books', title: 'Books' },
+  { link: '/authors', title: 'Authors' },
+];
+
+const bookRouter = require('./src/routes/bookRoutes')(nav);
+```
+In Javascript, what we're doing in `require('./src/routes/bookRoutes')(nav)` we are actually calling that line as a function. So we are passing `nav` as a parameter.
+
+We obviously need to change `bookRouter.js` so that it becomes a function.
+
+```javascript
+const express = require('express');
+
+const bookRouter = express.Router();
+
+// The function!
+function router(nav) {
+  const books = [
+    {
+      title: 'The Time Machine', genre: 'Science Fiction', author: 'H. G. Wells', read: false,
+    },
+    {
+      title: 'The Dark World', genre: 'Fantasy', author: 'Henry Kuttner', read: false,
+    },
+  ];
+
+  bookRouter.route('/')
+    .get((req, res) => {
+      res.render(
+        'books',
+        {
+          title: 'MyLibrary',
+          nav,
+          books,
+        },
+      );
+    });
+
+  bookRouter.route('/:id')
+    .get((req, res) => {
+      const { id } = req.params;
+      res.render(
+        'book',
+        {
+          title: 'MyLibrary',
+          nav: [
+            { link: '/books', title: 'Books' },
+            { link: '/authors', title: 'Authors' },
+          ],
+          book: books[id],
+        },
+
+      );
+    });
+  // Make sure we return this.
+  return bookRouter;
+}
+
+// Then use `router` to export
+module.exports = router;
+
+```
+
+## Databases
+We are still using the `books` array. Next we tackle databases. 
