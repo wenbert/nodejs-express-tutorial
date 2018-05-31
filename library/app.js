@@ -15,6 +15,11 @@ app.use('/js', express.static(path.join(__dirname, 'node_modules/bootstrap/dist/
 app.use('/js', express.static(path.join(__dirname, 'node_modules/jquery/dist')));
 app.use('/js', express.static(path.join(__dirname, 'node_modules/popper.js/dist/umd')));
 
+app.use((req, res, next) => {
+  debug('My Middleware');
+  next();
+});
+
 app.set('views', './src/views');
 // app.set('view engine', 'pug');
 app.set('view engine', 'ejs');
@@ -24,7 +29,7 @@ const nav = [
   { link: '/authors', title: 'Authors' },
 ];
 
-const bookRouter = require('./src/routes/bookRoutes')(nav);
+const bookRouter = require('./src/routes/bookRoutes.js')(nav);
 
 app.use('/books', bookRouter);
 

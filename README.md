@@ -254,7 +254,7 @@ Instead of constantly running `$ DEBUG=app node app.js`, we setup in `package.js
 
 ```json
 "scripts": {
-    "start": "DEBUG=app node app.js", //<-- Add that!
+    "start": "DEBUG=app,app:* node app.js", //<-- Add that!
     "test": "echo \"Error: no test specified\" && exit 1"
   },
 ```
@@ -758,3 +758,200 @@ module.exports = router;
 
 ## Databases
 We are still using the `books` array. Next we tackle databases. 
+
+The Pluralsight tutorial uses Azure MSSql. I don't want to do that so let's replicate this using SQLite.
+
+First, make sure you have SQLite installed on your machine. You can use Homebrew to do it. And then install sqlite3 with npm.
+
+```
+$ brew install sqlite
+$ npm install sqlite3
+```
+That's it! You should now be able to use SQLite. 
+
+An extra goodie, install https://sqlitebrowser.org/!
+
+SQLite Browser is pretty self-explanatory. To start, create a new database file: `./db/library.db`. Then create `books` table. With the following fields: 
+* id (auto-increment)
+* title
+* author
+
+Use SQLite Browser to create sample records in the `books` table.
+
+To test, in `app.js` add this.
+```javascript
+// source: http://www.sqlitetutorial.net/sqlite-nodejs/connect/
+const sqlite3 = require('sqlite3').verbose();
+ 
+// open the database
+let db = new sqlite3.Database('./db/library.db', sqlite3.OPEN_READWRITE, (err) => {
+  if (err) {
+    console.error(err.message);
+  }
+  console.log('Connected to the chinook database.');
+});
+ 
+db.serialize(() => {
+  db.each(`SELECT *
+           FROM books`, (err, row) => {
+    if (err) {
+      console.error(err.message);
+    }
+    console.log(row.id + "\t" + row.title + "\t" + row.author);
+  });
+});
+ 
+db.close((err) => {
+  if (err) {
+    console.error(err.message);
+  }
+  console.log('Close the database connection.');
+});
+```
+
+Run `$ npm start` and you should see something like:
+```
+Connected to the chinook database.
+1       The Hobbit      JRR Tolkien
+2       Harry Potter    JK Rowling
+Close the database connection.
+```
+
+Let's apply this to `bookRoutes.js`. It should now look like:
+```javascript
+const express = require('express');
+// const debug = require('debug')('app:bookRoutes');
+const sqlite3 = require('sqlite3').verbose();
+
+const db = new sqlite3.Database('./db/library.db');
+
+const bookRouter = express.Router();
+
+// The function!
+function router(nav) {
+  bookRouter.route('/')
+    .get((req, res) => {
+      const sql = 'SELECT * FROM books';
+      db.all(sql, [], (err, results) => {
+        res.render(
+          'books',
+          {
+            title: 'MyLibrary',
+            nav,
+            books: results,
+          },
+        );
+      });
+    });
+
+  bookRouter.route('/:id')
+    .get((req, res) => {
+      const { id } = req.params;
+      const sql = 'SELECT * FROM books WHERE id = ?';
+      db.get(sql, [id], (err, result) => {
+        res.render(
+          'book',
+          {
+            title: 'MyLibrary',
+            nav,
+            book: result,
+          },
+        );
+      });
+    });
+  return bookRouter;
+}
+
+module.exports = router;
+
+```
+
+`books.ejs` would have a slight modification: `<%=books[i].id%>` - because previously, we were displaying the index of the array and not the id in the table.
+```html
+<ul>
+<%for (var i = 0; i < books.length; i++) {%>
+    <li>
+        <a class="nav-item nav-link" href="/books/<%=books[i].id%>">
+            <%=books[i].title%>
+            by (<%=books[i].author%>)
+        </a>
+    </li>
+<%}%>
+</ul>
+```
+
+Now, `bookRoutes.js` works. But that the old way of doing things. Using `.then()` is a Promise. We can get rid of those Promises and use `async/await`. But since we are using SQLite, I'm not sure how to do it yet. So I will put in how it looked like in the tutorial.
+
+```javascript
+(() {} ());
+```
+Then...
+```javascript
+function router(nav) {
+  bookRouter.route('/')
+    .get((req, res) => {
+      (async function query() {
+        const request = new sql.Request();
+            books: result.recordset,
+        const { recordset } = await request.query('SELECT * FROM books');
+        // debug(result);
+        res.render(
+          'books',
+          {
+            title: 'MyLibrary',
+            nav,
+            books: recordset,
+          },
+        );
+      }());
+    });
+
+    bookRouter.route('/:id')
+    .get((req, res) => {
+      (async function query() {
+        const { id } = req.params;
+        const request = new sql.Request();
+        const { recordset } = 
+          await request.input('id', sql.Int, id)
+            .query('SELECT * FROM books WHERE id = @id');
+        res.render(
+          'books',
+          {
+            title: 'MyLibrary',
+            nav,
+            book: recordset[0],
+          },
+        );
+      }());
+    });
+  return bookRouter;
+}
+```
+
+### Middleware
+
+Try this in `app.js`
+```javascript
+app.use((req, res, next) => {
+  debug('My Middleware');
+  next();
+});
+```
+Now, when you restart `$ npm run`, you'll see that in the logs, the `My Middleware` is displayed after every request.
+
+```
+[nodemon] starting `node app.js`
+  app listening on port 4000 +0ms
+  app My Middleware +1s
+GET /books/1 304 - - 18.018 ms
+  app My Middleware +8s
+GET /books/1 304 - - 2.582 ms
+  app My Middleware +5s
+GET /books/2 304 - - 1.034 ms
+```
+
+What this is used for is that I can interrupt the process flow and do whatever I want to do.
+
+
+## MongoDB
+Up next...
