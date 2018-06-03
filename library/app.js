@@ -30,8 +30,10 @@ const nav = [
 ];
 
 const bookRouter = require('./src/routes/bookRoutes.js')(nav);
+const adminRouter = require('./src/routes/adminRoutes.js')(nav);
 
 app.use('/books', bookRouter);
+app.use('/admin', adminRouter);
 
 app.get('/', (req, res) => {
   // res.sendFile(path.join(__dirname, 'views/index.html'));

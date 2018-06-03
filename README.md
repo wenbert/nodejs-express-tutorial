@@ -954,4 +954,178 @@ What this is used for is that I can interrupt the process flow and do whatever I
 
 
 ## MongoDB
-Up next...
+
+I installed MongoDB using Homebrew: https://docs.mongodb.com/manual/tutorial/install-mongodb-on-os-x/
+
+I created a directory in `/Users/wenbert/dev/mongodb_data`.
+
+To run with custom path to data directory, use:
+```
+$ mongod --dbpath /Users/wenbert/dev
+```
+
+To start using MongoDB from CLI you can do:
+```
+$ mongo --host 127.0.0.1:27017
+```
+
+### Admin Routes
+
+We are creating a Admin Routes that will handle the insertion of data to MongoDB for us.
+
+This is a good oppotunity to create another router.
+
+Create: `./src/routes/adminRoutes.js`:
+```javascript
+const express = require('express');
+
+const adminRouter = express.Router();
+
+function router(nav) {
+  adminRouter.route('/')
+    .get((req, res) => {
+      res.send('inserting books');
+    });
+  return adminRouter;
+}
+
+module.exports = router;
+```
+
+Then add this is `app.js`:
+
+```javascript
+const adminRouter = require('./src/routes/adminRoutes.js')(nav);
+app.use('/admin', adminRouter);
+```
+
+If you point your browser to: `http://localhost:4000/admin` you should get "inserting books".
+
+Next step is to actually plug in MongoDB.
+
+First step is to install the MongoDB Driver.
+
+```
+$ npm install mongodb
+```
+
+Then let's modify `adminRoutes.js` so that we can insert data into mongodb.
+
+```javascript
+const express = require('express');
+// const MongoClient = require('mongodb').MongoClient;
+const { MongoClient } = require('mongodb');
+const debug = require('debug')('app:adminRoutes');
+const adminRouter = express.Router();
+
+const books = [
+  {
+    title: 'The Lord of the Rings',
+    genre: 'Fantasy',
+    author: 'Tolkien',
+    read: false,
+  },
+  {
+    title: 'Star Wars',
+    genre: 'Sci-Fi',
+    author: 'Lucas',
+    read: false,
+  },
+];
+
+
+function router(nav) {
+  adminRouter.route('/')
+    .get((req, res) => {
+      const url = 'mongodb://localhost:27017';
+      const dbName = 'libraryApp';
+
+      (async function mongo() {
+        let client;
+        try {
+          client = await MongoClient.connect(url);
+          debug('Connected to the mongodb server');
+
+          const db = client.db(dbName);
+
+          const response = await db.collection('books').insertMany(books);
+          res.json(response);
+        } catch (err) {
+          debug(err.stack);
+        }
+
+        client.close();
+      }());
+    });
+  return adminRouter;
+}
+
+module.exports = router;
+
+```
+
+Go to: `http://localhost:4000/admin`
+
+You should see this result:
+```json
+{
+    "result": {
+        "ok": 1,
+        "n": 2
+    },
+    "ops": [
+        {
+            "title": "The Lord of the Rings",
+            "genre": "Fantasy",
+            "author": "Tolkien",
+            "read": false,
+            "_id": "5b13c93a131ed00f0bce0ae1"
+        },
+        {
+            "title": "Star Wars",
+            "genre": "Sci-Fi",
+            "author": "Lucas",
+            "read": false,
+            "_id": "5b13c93a131ed00f0bce0ae2"
+        }
+    ],
+    "insertedCount": 2,
+    "insertedIds": {
+        "0": "5b13c93a131ed00f0bce0ae1",
+        "1": "5b13c93a131ed00f0bce0ae2"
+    }
+}
+```
+
+To check this you can go to the MongoDB CLI and do the following:
+```
+$ mongo --host 127.0.0.1:27017
+MongoDB shell version v3.6.4
+connecting to: mongodb://127.0.0.1:27017/
+MongoDB server version: 3.6.4
+Welcome to the MongoDB shell.
+For interactive help, type "help".
+...
+> show dbs
+admin       0.000GB
+config      0.000GB
+libraryApp  0.000GB
+local       0.000GB
+> use libraryApp
+> db.books.find().pretty()
+{
+	"_id" : ObjectId("5b13c91030210c0f0217516f"),
+	"title" : "The Lord of the Rings",
+	"genre" : "Fantasy",
+	"author" : "Tolkien",
+	"read" : false
+}
+{
+	"_id" : ObjectId("5b13c91030210c0f02175170"),
+	"title" : "Star Wars",
+	"genre" : "Sci-Fi",
+	"author" : "Lucas",
+	"read" : false
+}
+>
+```
