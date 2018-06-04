@@ -1136,9 +1136,7 @@ Now to use MongoDB in `bookRoutes`, we update `bookRoutes.js` to look something 
 const express = require('express');
 const { MongoClient } = require('mongodb');
 const debug = require('debug')('app:bookRoutes');
-const sqlite3 = require('sqlite3').verbose();
 
-const db = new sqlite3.Database('./db/library.db');
 const bookRouter = express.Router();
 
 // The function!
@@ -1147,6 +1145,7 @@ function router(nav) {
     .get((req, res) => {
       /* For MongoDB: */
       const url = 'mongodb://localhost:27017';
+      const dbName = 'libraryApp';
 
       // IFFY
       // (() {} ());
@@ -1156,6 +1155,7 @@ function router(nav) {
           client = await MongoClient.connect(url);
           debug('Connected to the mongodb server');
 
+          const db = client.db(dbName);
           const collection = await db.collection('books');
           const books = await collection.find().toArray();
 
@@ -1174,7 +1174,7 @@ function router(nav) {
         client.close();
       }());
 
-      /* This was for SQLite:
+      /* For SQLite:
       const sql = 'SELECT * FROM books';
       db.all(sql, [], (err, result) => {
         res.render(
@@ -1208,7 +1208,6 @@ function router(nav) {
   return bookRouter;
 }
 
-// Export!
 module.exports = router;
 
 ```
