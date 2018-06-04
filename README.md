@@ -1131,6 +1131,8 @@ local       0.000GB
 >
 ```
 
+You can also use tools like https://robomongo.org/download to browse MongoDB collections.
+
 Now to use MongoDB in `bookRoutes`, we update `bookRoutes.js` to look something like this:
 ```javascript
 const express = require('express');
@@ -1212,6 +1214,69 @@ module.exports = router;
 
 ```
 
+In the view file (`./src/views/books.ejs`), we need to change the link URL when you click on a book title. At the moment, it would look like this:
+```html
+<a class="nav-item nav-link" href="/books/<%=books[i].id%>">
+    <%=books[i].title%>
+    by (<%=books[i].author%>)
+</a>
+```
+Just change `<%=books[i].id%>` to `<%=books[i]._id%>` - because that's the ID found in MongoDB.
+
 Head over to `http://localhost:4000/books` and you should see a list of books from MongoDB.
 
-You can also use tools like https://robomongo.org/download to browse MongoDB collections.
+When you click on a book title, it will spit out an error because we have worked on that part yet. Let's get that covered...
+
+Open update `bookRoutes.js` to contain this:
+```javascript
+  bookRouter.route('/:id')
+    .get((req, res) => {
+      const { id } = req.params;
+      const url = 'mongodb://localhost:27017';
+      const dbName = 'libraryApp';
+
+      (async function mongo() {
+        let client;
+        try {
+          client = await MongoClient.connect(url);
+          debug('Connected to the mongodb server');
+
+          const db = client.db(dbName);
+          const collection = await db.collection('books');
+          const book = await collection.findOne({ _id: new ObjectID(id) });
+
+          debug(book);
+          res.render(
+            'book',
+            {
+              title: 'MyLibrary',
+              nav,
+              book,
+            },
+          );
+        } catch (err) {
+          debug(err.stack);
+        }
+
+        client.close();
+      }());
+
+      /* For SQLite:
+      const sql = 'SELECT * FROM books WHERE id = ?';
+      db.get(sql, [id], (err, result) => {
+        res.render(
+          'book',
+          {
+            title: 'MyLibrary',
+            nav,
+            book: result,
+          },
+        );
+      });
+      */
+    });
+```
+
+Now if you click on a book title, it should display all the details.
+
+Next is Authentication.

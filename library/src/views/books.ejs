@@ -1,7 +1,7 @@
 <ul>
 <%for (var i = 0; i < books.length; i++) {%>
     <li>
-        <a class="nav-item nav-link" href="/books/<%=books[i].id%>">
+        <a class="nav-item nav-link" href="/books/<%=books[i]._id%>">
             <%=books[i].title%>
             by (<%=books[i].author%>)
         </a>

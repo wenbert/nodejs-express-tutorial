@@ -42,7 +42,7 @@ function router(nav) {
 
         client.close();
       }());
-      //res.send('inserting books');
+      // res.send('inserting books');
     });
   return adminRouter;
 }
