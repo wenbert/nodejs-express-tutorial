@@ -1,5 +1,6 @@
 const express = require('express');
-// const debug = require('debug')('app:bookRoutes');
+const { MongoClient } = require('mongodb');
+const debug = require('debug')('app:bookRoutes');
 const sqlite3 = require('sqlite3').verbose();
 
 const db = new sqlite3.Database('./db/library.db');
@@ -9,6 +10,36 @@ const bookRouter = express.Router();
 function router(nav) {
   bookRouter.route('/')
     .get((req, res) => {
+      /* For MongoDB: */
+      const url = 'mongodb://localhost:27017';
+
+      // IFFY
+      // (() {} ());
+      (async function mongo() {
+        let client;
+        try {
+          client = await MongoClient.connect(url);
+          debug('Connected to the mongodb server');
+
+          const collection = await db.collection('books');
+          const books = await collection.find().toArray();
+
+          res.render(
+            'books',
+            {
+              title: 'MyLibrary',
+              nav,
+              books,
+            },
+          );
+        } catch (err) {
+          debug(err.stack);
+        }
+
+        client.close();
+      }());
+
+      /* For SQLite:
       const sql = 'SELECT * FROM books';
       db.all(sql, [], (err, result) => {
         res.render(
@@ -20,6 +51,7 @@ function router(nav) {
           },
         );
       });
+      */
     });
 
   bookRouter.route('/:id')
@@ -37,6 +69,7 @@ function router(nav) {
         );
       });
     });
+
   return bookRouter;
 }
 
