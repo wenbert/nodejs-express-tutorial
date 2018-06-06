@@ -1280,3 +1280,87 @@ Open update `bookRoutes.js` to contain this:
 Now if you click on a book title, it should display all the details.
 
 Next is Authentication.
+
+## Authentication
+This section involve:
+* Creating Users
+* Authentication
+* Authorization
+* Passport (from Express)
+
+Create the sign up form. I edited `./src/views/index.ejs` and added this bit:
+```html
+<div class="row">
+    <div class="col-12">
+        <h3>Sign Up!</h3>
+        <form name="signupForm" action="/auth/signUp" method="post">
+            Username: <input name="username" id="username">
+            Password: <input type="password" name="password" id="password">
+            <input type="submit" value="Sign Up"/>
+        </form>
+    </div>
+</div>
+```
+
+After that, we need to create the "Auth Routes". So create `./src/routes/authRoutes.js`. To start, it will this:
+```javascript
+const express = require('express');
+const { MongoClient, ObjectID } = require('mongodb');
+const debug = require('debug')('app:authRoutes');
+
+const authRouter = express.Router();
+
+function router() {
+  authRouter.route('/signUp')
+    .post((req, res) => {
+      // req?
+      // Need body-parser
+      // $ npm install body-parser
+    });
+}
+
+module.exports = router;
+
+```
+
+So, install body-parser with `$ npm install body-parser`.
+
+This is a middleware. So we need to update `app.js`.
+```javascript
+const bodyParser = require('body-parser');
+app.use(morgan('tiny'));
+app.use(bodyParser.json()); // <-- Add this! Make sure it's before the routes
+app.use(bodyParser.urlencoded({ extended: false })); // <-- and this!
+app.use(express.static(path.join(__dirname, '/public/')));
+...
+const authRouter = require('./src/routes/authRoutes.js')();
+...
+app.use('/auth', authRouter);
+```
+
+Update `authRoutes.js`:
+```javascript
+const express = require('express');
+const { MongoClient, ObjectID } = require('mongodb');
+const debug = require('debug')('app:authRoutes');
+
+const authRouter = express.Router();
+
+function router() {
+  authRouter.route('/signUp')
+    .post((req, res) => {
+      debug(req.body);
+    });
+
+  return authRouter;
+}
+
+module.exports = router;
+
+```
+
+So when you submit the Sign Up form, you should see this in the logs:
+```json
+app:authRoutes { username: 'wenbert', password: 'gwapo' }
+```
+
