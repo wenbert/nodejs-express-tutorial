@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+
+    <title><%=title%></title>
+  </head>
+  <body>
+  
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="#">Navbar</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+            <%for (var i = 0; i < nav.length; i++) {%>
+                <a class="nav-item nav-link" href="<%=nav[i].link%>"><%=nav[i].title%></a>
+            <%}%>
+            </div>
+        </div>
+        </nav>
+        <div class="row">
+            <div class="col-12">
+                <h3>Sign In!</h3>
+                <form name="signupForm" action="/auth/signin" method="post">
+                    Username: <input name="username" id="username">
+                    Password: <input type="password" name="password" id="password">
+                    <input type="submit" value="Sign In"/>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="/js/jquery.slim.min.js"></script>
+    <script src="/js/popper.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+  </body>
+</html>

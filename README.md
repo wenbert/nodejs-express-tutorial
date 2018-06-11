@@ -1364,3 +1364,311 @@ So when you submit the Sign Up form, you should see this in the logs:
 app:authRoutes { username: 'wenbert', password: 'gwapo' }
 ```
 
+https://nodewebapps.com/2017/06/18/how-do-nodejs-sessions-work/
+
+## Passport
+
+```
+$ npm install passport cookie-parser express-session
+```
+
+Install those 2 packages.
+
+Update `app.js` to use those 3:
+```javascript
+const passport = require('passport');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+
+...
+
+app.use(cookieParser());
+app.use(session({ secret: 'library' }));
+
+require('./src/config/passport.js')(app);
+```
+
+Let's create the `./src/config/passport.js` file. Here is a sample content of it.
+
+```javascript
+const passport = require('passport');
+require('./strategies/local.strategy');
+
+module.exports = function passportConfig(app) {
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // Stores user in session
+  passport.serializeUser((user, done) => {
+    done(null, user);
+  });
+
+  // Retrives user from session
+  passport.deserializeUser((user, done) => {
+    // Find user by id
+    done(null, user);
+  });
+};
+
+};
+```
+
+Now let's implement `local.strategy`. First, let's install it.
+```
+$ npm install passport-local
+```
+
+Then create `./src/config/strategies/local.strategy.js` with the following contents:
+```javascript
+const passport = require('passport');
+const { Strategy } = require('passport-local');
+
+module.exports = function localStrategy() {
+  passport.use(new Strategy({
+    usernameField: 'username',
+    passwordField: 'password',
+  }, (username, password, done) => {
+    const user = {
+      username, password,
+    };
+    done(null, user);
+  }));
+};
+```
+
+Update `authRoutes.js` to look like:
+```javascript
+const express = require('express');
+const { MongoClient, ObjectID } = require('mongodb');
+const debug = require('debug')('app:authRoutes');
+
+const authRouter = express.Router();
+
+function router() {
+  authRouter.route('/signUp')
+    .post((req, res) => {
+      debug(req.body);
+      // create user here
+      // res.json(req.body);
+      req.login(req.body, () => {
+        res.redirect('/auth/profile');
+      });
+    });
+
+  authRouter.route('/profile')
+    .get((req, res) => {
+      res.json(req.user);
+    });
+  return authRouter;
+}
+
+module.exports = router;
+
+```
+
+Then try to "login". You should see it working as expected. So when you tried to sign-up, the `local.strategy.js` along with `passport` did it's magic. You should see everything "routed" and passed properly.
+
+Update `authRoutes.js` to:
+```javascript
+const express = require('express');
+const { MongoClient, ObjectID } = require('mongodb');
+const debug = require('debug')('app:authRoutes');
+
+const authRouter = express.Router();
+
+function router() {
+  authRouter.route('/signUp')
+    .post((req, res) => {
+      const { username, password } = req.body;
+      const url = 'mongodb://localhost:27017';
+      const dbName = 'libraryApp';
+
+      (async function addUser() {
+        let client;
+        try {
+          client = await MongoClient.connect(url);
+          debug('Connected to the mongodb server');
+
+          const db = client.db(dbName);
+
+          const col = db.collection('users');
+          const user = { username, password };
+          const result = await col.insertOne(user);
+
+          req.login(result.ops[0], () => {
+            res.redirect('/auth/profile');
+          });
+        } catch (err) {
+          debug(err.stack);
+        }
+        client.close();
+      }());
+    });
+
+  authRouter.route('/profile')
+    .get((req, res) => {
+      res.json(req.user);
+    });
+  return authRouter;
+}
+
+module.exports = router;
+
+```
+
+Now that we have the user being created, the next part is to actually validate the login - time to sign in.
+
+First, we create the 'sign in' page which just contains the form to login.
+
+Update `authRoutes.js` to accept `nav`.
+```javascript
+function router(nav) {
+  ...
+  authRouter.route('/signin')
+  .get((req, res) => {
+    res.render('signin', {
+      nav,
+      title: 'signIn'
+    });
+  });
+}
+```
+
+And update `app.js`:
+```javascript
+const authRouter = require('./src/routes/authRoutes.js')(nav);
+```
+
+After that let's create the view `./views/signin.ejs`:
+```html
+<h3>Sign In!</h3>
+<form name="signupForm" action="/auth/signin" method="post">
+    Username: <input name="username" id="username">
+    Password: <input type="password" name="password" id="password">
+    <input type="submit" value="Sign In"/>
+</form>
+```
+
+Update `passport.js`:
+```javascript
+require('./strategies/local.strategy')(); // <-- add ()
+```
+
+Your `signin` route should now look like this:
+```javascript
+authRouter.route('/signin')
+  .get((req, res) => {
+    res.render('signin', {
+      nav,
+      title: 'Sign In',
+    });
+  })
+  .post(passport.authenticate('local', {
+    sucessRedirect: '/auth/profile',
+    failureRedirect: '/',
+  }));
+```
+
+`authRoutes.js` finally looks like this;
+```javascript
+const express = require('express');
+const { MongoClient, ObjectID } = require('mongodb');
+const debug = require('debug')('app:authRoutes');
+const passport = require('passport');
+
+const authRouter = express.Router();
+
+function router(nav) {
+  authRouter.route('/signUp')
+    .post((req, res) => {
+      const { username, password } = req.body;
+      const url = 'mongodb://localhost:27017';
+      const dbName = 'libraryApp';
+
+      (async function addUser() {
+        let client;
+        try {
+          client = await MongoClient.connect(url);
+          debug('Connected to the mongodb server');
+
+          const db = client.db(dbName);
+
+          const col = db.collection('users');
+          const user = { username, password };
+          const result = await col.insertOne(user);
+
+          req.login(result.ops[0], () => {
+            res.redirect('/auth/profile');
+          });
+        } catch (err) {
+          debug(err.stack);
+        }
+        client.close();
+      }());
+    });
+
+  authRouter.route('/signin')
+    .get((req, res) => {
+      res.render('signin', {
+        nav,
+        title: 'Sign In',
+      });
+    })
+    .post(passport.authenticate('local', {
+      successRedirect: '/auth/profile',
+      failureRedirect: '/',
+    }));
+  authRouter.route('/profile')
+    .get((req, res) => {
+      res.json(req.user);
+    });
+
+  return authRouter;
+}
+
+module.exports = router;
+
+```
+
+And `local.strategy.js`:
+```javascript
+const passport = require('passport');
+const { Strategy } = require('passport-local');
+const { MongoClient } = require('mongodb');
+const debug = require('debug')('app:local.strategy');
+
+module.exports = function localStrategy() {
+  passport.use(new Strategy({
+    usernameField: 'username',
+    passwordField: 'password',
+  }, (username, password, done) => {
+    const url = 'mongodb://localhost:27017';
+    const dbName = 'libraryApp';
+
+    (async function mongo() {
+      let client;
+      try {
+        client = await MongoClient.connect(url);
+        debug('Connected to the mongodb server');
+
+        const db = client.db(dbName);
+        const col = db.collection('users');
+
+        const user = await col.findOne({ username });
+        debug('Found username');
+
+        if (user.password === password) {
+          done(null, user);
+        } else {
+          done(null, false);
+        }
+      } catch (err) {
+        debug(err.stack);
+      }
+
+      client.close();
+    }());
+  }));
+};
+
+```
