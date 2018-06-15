@@ -3,10 +3,11 @@ const express = require('express');
 const bookController = require('../controllers/bookController.js');
 
 const bookRouter = express.Router();
+const bookService = require('../services/goodreadsService.js');
 
 // The function!
 function router(nav) {
-  const { getIndex, getById, middleware } = bookController(nav);
+  const { getIndex, getById, middleware } = bookController(bookService, nav);
 
   bookRouter.use(middleware);
 

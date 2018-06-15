@@ -43,6 +43,7 @@ You can view Javascript and ES6 here: https://github.com/wenbert/es6
         - [Authorising Users / Protecting routes](#authorising-users--protecting-routes)
     - [Structure and Third-party APIs](#structure-and-third-party-apis)
         - [Controllers](#controllers)
+    - [API calls with Services](#api-calls-with-services)
 
 <!-- /TOC -->
 
@@ -1504,6 +1505,7 @@ function router() {
   return authRouter;
 }
 
+
 module.exports = router;
 
 ```
@@ -1944,3 +1946,100 @@ module.exports = router;
 
 Next up are services for API calls.
 
+## API calls with Services
+
+We will be using the BookReads API. Go ahead and grab a developer key from https://www.goodreads.com/api/keys
+
+Let's setup the structure for the services. Create this file: `./src/services/goodreadsService.js`. For now this will be empty.
+
+Then update your `bookRoutes.js`. 
+```javascript
+const express = require('express');
+
+const bookController = require('../controllers/bookController.js');
+
+const bookRouter = express.Router();
+
+// Add this!
+const bookService = require('../services/goodreadsService.js');
+
+function router(nav) {
+
+  // Then pass it to bookController
+  const { getIndex, getById, middleware } = bookController(bookService, nav);
+
+  bookRouter.use(middleware);
+
+  bookRouter.route('/')
+    .get(getIndex);
+
+  bookRouter.route('/:id')
+    .get(getById);
+
+  return bookRouter;
+}
+
+module.exports = router;
+
+```
+
+Then in `bookController.js`, it is expected that we update the function definition to something like this.
+
+The plan is that we want the `bookController::getById()` to fetch the "details" from the service before and then render it in the view.
+
+```javascript
+function bookController(bookService, nav) {
+  //...
+  function getById(req, res) {
+    // ... inside the async/await block
+      // We still need to implement this: bookService.getBookById
+      book.details = await bookService.getBookById(book.bookId);
+        res.render(
+          'book',
+          {
+            title: 'MyLibrary',
+            nav,
+            book,
+          },
+        );
+    // ...
+  });
+}
+```
+
+Initially `goodreadsService.js` will look like this:
+
+```javascript
+function goodreadsService() {
+  function getBookById() {
+    return new Promise(((resolve, reject) => {
+      resolve({ description: 'our description' });
+    }));
+  }
+
+  return { getBookById };
+}
+
+module.exports = goodreadsService();
+```
+
+Then in `./views/book.ejs` add the description like this:
+```html
+<p>
+Details from API: <%=book.details.description%>
+</p>
+```
+
+Refresh and it should display "our description". So everything works.
+
+So to sum up this part, what we did was:
+
+1. Edit `bookRoutes.js` to declare `const bookService = require('../services/goodreadsService.js');`
+1. Then we passed that constant to the controller `const { getIndex, getById, middleware } = bookController(bookService, nav);`
+1. Then we accepted that in the controller. `function bookController(bookService, nav) {...}`
+1. So that we can use and call from the service. `book.details = await bookService.getBookById(book.bookId);`
+1. Then in our view, we call it directly. `Details from API: <%=book.details.description%>`
+
+Note, we have not passed anything. We are simply hard-coding the result. So let's actually query the API to get something.
+
+To be continued...
