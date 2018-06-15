@@ -1672,3 +1672,233 @@ module.exports = function localStrategy() {
 };
 
 ```
+
+### Authorising Users / Protecting routes
+
+So let's restrict our routes. In this example, let's protect `profile`.
+The `profile` route in `authRoutes.js` would look like this:
+```javascript
+  authRouter.route('/profile')
+    .all((req, res, next) => {
+      if (req.user) {
+        next();
+      } else {
+        res.redirect('/');
+      }
+    })
+    .get((req, res) => {
+      res.json(req.user);
+    });
+```
+
+If we want to restrict all of `books` route, we just use this in `bookRoutes.js`
+```javascript
+function router(nav) {
+  bookRouter.use((req, res, next) => {
+    if (req.user) {
+      next();
+    } else {
+      res.redirect('/');
+    }
+  });
+
+  // bookRouter.route('/')
+  // ...
+ return bookRouter;
+}
+```
+
+To logout, do this http://www.passportjs.org/docs/logout/
+
+## Structure and Third-party APIs
+
+* Building a Web Application
+* Structure
+* Controllers
+* Services
+* 3rd Party APIs 
+
+### Controllers
+
+When you look at `bookRoutes.js`, you see that it's a bit of a mess. This has been a glaring question on the back of my head since from the beginning. In PHP, we usually a controller to handle these requests. And rightfully so, this video deals with it also.
+
+Let's structure this part properly.
+
+First thing to do is to go to `bookRoutes.js` and do this:
+```javascript
+const bookController = require('../controllers/bookController.js');
+```
+
+And then create the directory `./src/controllers/`.
+
+So `bookController` is going to be a function and then we are going to export it. 
+```javascript
+function bookController() {
+  function getIndex() {
+
+  }
+  function getById() {
+
+  }
+}
+module.exports = bookController;
+```
+
+Go to `bookRoutes.js` and move everything inside:
+```javascript
+  bookRouter.route('/')
+    .get((req, res) => {
+      // ... Cut the contents ...
+    });
+```
+
+In the end, the `bookController.js` file would now look like this:
+```javascript
+const { MongoClient, ObjectID } = require('mongodb');
+const debug = require('debug')('app:bookController');
+
+function bookController(nav) {
+
+  function middleware(req, res, next) {
+    if (req.user) {
+      next();
+    } else {
+      res.redirect('/');
+    }
+  }
+
+  function getIndex(req, res) {
+    /* For MongoDB: */
+    const url = 'mongodb://localhost:27017';
+    const dbName = 'libraryApp';
+
+    // IFFY
+    // (() {} ());
+    (async function mongo() {
+      let client;
+      try {
+        client = await MongoClient.connect(url);
+        debug('Connected to the mongodb server');
+
+        const db = client.db(dbName);
+        const collection = await db.collection('books');
+        const books = await collection.find().toArray();
+
+        res.render(
+          'books',
+          {
+            title: 'MyLibrary',
+            nav,
+            books,
+          },
+        );
+      } catch (err) {
+        debug(err.stack);
+      }
+
+      client.close();
+    }());
+
+    /* For SQLite:
+    const sql = 'SELECT * FROM books';
+    db.all(sql, [], (err, result) => {
+      res.render(
+        'books',
+        {
+          title: 'MyLibrary',
+          nav,
+          books: result,
+        },
+      );
+    });
+    */
+  }
+  function getById(req, res) {
+    const { id } = req.params;
+    const url = 'mongodb://localhost:27017';
+    const dbName = 'libraryApp';
+
+    (async function mongo() {
+      let client;
+      try {
+        client = await MongoClient.connect(url);
+        debug('Connected to the mongodb server');
+
+        const db = client.db(dbName);
+        const collection = await db.collection('books');
+        const book = await collection.findOne({ _id: new ObjectID(id) });
+
+        debug(book);
+        res.render(
+          'book',
+          {
+            title: 'MyLibrary',
+            nav,
+            book,
+          },
+        );
+      } catch (err) {
+        debug(err.stack);
+      }
+
+      client.close();
+    }());
+
+    /* For SQLite:
+    const sql = 'SELECT * FROM books WHERE id = ?';
+    db.get(sql, [id], (err, result) => {
+      res.render(
+        'book',
+        {
+          title: 'MyLibrary',
+          nav,
+          book: result,
+        },
+      );
+    });
+    */
+  }
+
+  return {
+    middleware,
+    getIndex,
+    getById,
+  };
+}
+
+module.exports = bookController;
+
+```
+
+And `bookRoutes.js` finally will be like this:
+```javascript
+const express = require('express');
+const { MongoClient, ObjectID } = require('mongodb');
+const debug = require('debug')('app:bookRoutes');
+
+const bookController = require('../controllers/bookController.js');
+
+const bookRouter = express.Router();
+
+// The function!
+function router(nav) {
+  function router(nav) {
+  const { getIndex, getById, middleware } = bookController(nav);
+
+  bookRouter.use(middleware);
+
+  bookRouter.route('/')
+    .get(getIndex);
+
+  bookRouter.route('/:id')
+    .get(getById);
+
+  return bookRouter;
+}
+
+module.exports = router;
+
+```
+
+Next up are services for API calls.
+
