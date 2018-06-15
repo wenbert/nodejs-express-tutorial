@@ -1,12 +1,25 @@
-# Building Web Applications with Node.js and Express 4.0
+# What's this about?
 
-https://app.pluralsight.com/player?course=nodejs-express-web-applications-update&author=jonathan-mills&name=3b5a5eb2-d13c-43e4-bfe1-015f98659a97&clip=0&mode=live
+This is my learning progress from: 
+[PluralSight: Web Applications with Node.js and Express 4.0 (Update as of June 2018) by Jonathan Mills](https://app.pluralsight.com/player?course=nodejs-express-web-applications-update&author=jonathan-mills&name=3b5a5eb2-d13c-43e4-bfe1-015f98659a97&clip=0&mode=live).
 
-You can view Javascript and ES6 here: https://github.com/wenbert/es6
+Hopefully, this document will be a useful resource - not just for myself but for everyone. It will serve as some kind of cheatsheet to look-up when needed.
 
+As a pre-requisite, it is recommended that you go through the previous PluralSight courses found in: [Learning Javascript and ES6 from PluralSight](https://github.com/wenbert/es6)
+
+# What am I trying to accomplish?
+
+1. Learn Javascript basics
+1. Learn Node.js and/or Express for the back-end
+1. Learn modern Javascript for the front-end
+1. React native (?)
+
+# Table of Contents
 <!-- TOC -->
 
-- [Building Web Applications with Node.js and Express 4.0](#building-web-applications-with-nodejs-and-express-40)
+- [What's this about?](#whats-this-about)
+- [What am I trying to accomplish?](#what-am-i-trying-to-accomplish)
+- [Table of Contents](#table-of-contents)
     - [Building web apps](#building-web-apps)
     - [Installing Node](#installing-node)
     - [NPM Versioning](#npm-versioning)
