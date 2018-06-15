@@ -2,7 +2,6 @@ const { MongoClient, ObjectID } = require('mongodb');
 const debug = require('debug')('app:bookController');
 
 function bookController(nav) {
-
   function middleware(req, res, next) {
     if (req.user) {
       next();
