@@ -4,6 +4,48 @@ https://app.pluralsight.com/player?course=nodejs-express-web-applications-update
 
 You can view Javascript and ES6 here: https://github.com/wenbert/es6
 
+<!-- TOC -->
+
+- [Building Web Applications with Node.js and Express 4.0](#building-web-applications-with-nodejs-and-express-40)
+    - [Building web apps](#building-web-apps)
+    - [Installing Node](#installing-node)
+    - [NPM Versioning](#npm-versioning)
+    - [First Page](#first-page)
+        - [Set up express](#set-up-express)
+        - [Running express](#running-express)
+        - [Logging and Debugging](#logging-and-debugging)
+        - [Serving HTML](#serving-html)
+        - [Serving static files](#serving-static-files)
+    - [Tooling](#tooling)
+        - [NPM start](#npm-start)
+        - [ESLint](#eslint)
+            - [Installing ESLint for Visual Studio Code](#installing-eslint-for-visual-studio-code)
+            - [Refactoring Tips in VS Code](#refactoring-tips-in-vs-code)
+        - [ES6 and beyond](#es6-and-beyond)
+        - [Nodemon](#nodemon)
+        - [Environmental variables](#environmental-variables)
+    - [Templating Engines](#templating-engines)
+        - [Pug](#pug)
+            - [Passing variables / objects to the template](#passing-variables--objects-to-the-template)
+        - [EJS](#ejs)
+        - [Templates](#templates)
+    - [Routing](#routing)
+        - [Navigation](#navigation)
+        - [Separating Files](#separating-files)
+        - [Passing parameters in routes](#passing-parameters-in-routes)
+        - [Routing Functions](#routing-functions)
+    - [Databases](#databases)
+        - [Middleware](#middleware)
+    - [MongoDB](#mongodb)
+        - [Admin Routes](#admin-routes)
+    - [Authentication](#authentication)
+    - [Passport](#passport)
+        - [Authorising Users / Protecting routes](#authorising-users--protecting-routes)
+    - [Structure and Third-party APIs](#structure-and-third-party-apis)
+        - [Controllers](#controllers)
+
+<!-- /TOC -->
+
 ## Building web apps
 * From the beginning
 * Node and NPM
