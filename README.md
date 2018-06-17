@@ -57,6 +57,7 @@ As a pre-requisite, it is recommended that you go through the previous PluralSig
     - [Structure and Third-party APIs](#structure-and-third-party-apis)
         - [Controllers](#controllers)
     - [API calls with Services](#api-calls-with-services)
+        - [Making an actual API call](#making-an-actual-api-call)
 
 <!-- /TOC -->
 
@@ -2055,4 +2056,136 @@ So to sum up this part, what we did was:
 
 Note, we have not passed anything. We are simply hard-coding the result. So let's actually query the API to get something.
 
-To be continued...
+### Making an actual API call
+
+First we need Axios and xml2js.
+
+```
+$ npm install axios xml2js --save
+```
+
+We will be querying this XML file:
+```
+https://www.goodreads.com/book/show/658.xml?key=uUkiJYvQrLQ3IOl9XWow
+```
+(I am going to reset that API key when I commit this change.)
+
+That will return something like:
+```xml
+<GoodreadsResponse>
+<Request>
+<authentication>true</authentication>
+<key>
+<![CDATA[ uUkiJYvQrLQ3IOl9XWow ]]>
+</key>
+<method>
+<![CDATA[ book_show ]]>
+</method>
+</Request>
+<book>
+<id>658</id>
+<title>
+<![CDATA[ The Kingdom of God Is Within You ]]>
+</title>
+<isbn>
+...
+<image_url>
+https://images.gr-assets.com/books/1328863873m/658.jpg
+</image_url>
+...
+<description>
+<![CDATA[
+Banned in Russia, Tolstoy's <i>The Kingdom of God Is Within You</i> was deemed a threat to...
+]]>
+</description>
+....
+```
+
+Modify `books.ejs` to contain the image URL.
+```javascript
+<p>
+<img src="<%=book.details.image_url%>"/>
+</p>
+<p>
+Details from API: <%-book.details.description%>
+</p>
+```
+
+We hard-coded the `658` ID - so let's work on passing an ID to the API.
+
+Before we move forward, open `adminRoutes.js`.
+You'll see that the `books` array does not have an ID for it. Let's update that to:
+```javascript
+const books = [
+  {
+    title: 'War and Peace',
+    genre: 'Historical Fiction',
+    author: 'Lev Nikolayvich Tolstoy',
+    bookId: 656,
+    read: false,
+  },
+  {
+    title: 'Les Miserables',
+    genre: 'Historical Fiction',
+    author: 'Victor Hugo',
+    bookId: 24280,
+    read: false,
+  },
+];
+
+```
+
+Then empty out / delete all of the books in MongoDB. You can use your favourite client to do that.
+
+Then go to: http://localhost:4000/admin
+
+That will "insert" all of `books` array into MongoDB. If you have forgotten this, then scroll up ;)
+
+Now, `bookId` should be inside the MongoDB collection.
+
+To pass in the ID we just added, update `goodreadsService.js` to:
+```javascript
+axios.get('https://www.goodreads.com/book/show/658.xml?key=uUkiJYvQrLQ3IOl9XWow')
+// Update to
+axios.get(`https://www.goodreads.com/book/show/${id}.xml?key=uUkiJYvQrLQ3IOl9XWow`)
+```
+
+In the end, it should look like this:
+```javascript
+const axios = require('axios');
+const xml2js = require('xml2js');
+const debug = require('debug')('app:goodreadsServices');
+
+const parser = xml2js.Parser({ explicitArray: false });
+
+function goodreadsService() {
+  function getBookById(id) {
+    return new Promise((resolve, reject) => {
+      // axios.get('https://www.goodreads.com/book/show/658.xml?key=uUkiJYvQrLQ3IOl9XWow')
+      axios.get(`https://www.goodreads.com/book/show/${id}.xml?key=uUkiJYvQrLQ3IOl9XWow`)
+        .then((response) => {
+          parser.parseString(response.data, (err, result) => {
+            if (err) {
+              debug(err);
+            } else {
+              debug(result);
+              resolve(result.GoodreadsResponse.book);
+            }
+          });
+        })
+        .catch((error) => {
+          reject(error);
+          debug(error);
+        });
+      // resolve({ description: 'our description' });
+    });
+  }
+
+  return { getBookById };
+}
+
+module.exports = goodreadsService();
+
+```
+
+That's it! LOL! Now to build something!

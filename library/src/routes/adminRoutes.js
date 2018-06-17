@@ -7,15 +7,17 @@ const adminRouter = express.Router();
 
 const books = [
   {
-    title: 'The Lord of the Rings',
-    genre: 'Fantasy',
-    author: 'Tolkien',
+    title: 'War and Peace',
+    genre: 'Historical Fiction',
+    author: 'Lev Nikolayvich Tolstoy',
+    bookId: 656,
     read: false,
   },
   {
-    title: 'Star Wars',
-    genre: 'Sci-Fi',
-    author: 'Lucas',
+    title: 'Les Miserables',
+    genre: 'Historical Fiction',
+    author: 'Victor Hugo',
+    bookId: 24280,
     read: false,
   },
 ];
